@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">My Chatting Pro</string>
+    <string name="notification_channel_messages">Private Messages</string>
+    <string name="notification_channel_calls">Incoming &amp; Active Calls</string>
+    <string name="notification_channel_missed_calls">Missed Calls</string>
+    <string name="new_message_privacy_safe">You received a new private message</string>
+    <string name="incoming_call_privacy_safe">Incoming call on My Chatting Pro</string>
+    <string name="missed_call_privacy_safe">Missed call</string>
+</resources>

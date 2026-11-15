@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">My Chatting Pro</string>
+    <string name="notification_channel_messages">ব্যক্তিগত বার্তা</string>
+    <string name="notification_channel_calls">আগত ও চলমান কল</string>
+    <string name="notification_channel_missed_calls">মিসড কল</string>
+    <string name="new_message_privacy_safe">আপনার একটি নতুন ব্যক্তিগত বার্তা এসেছে</string>
+    <string name="incoming_call_privacy_safe">My Chatting Pro-তে কল আসছে</string>
+    <string name="missed_call_privacy_safe">মিসড কল</string>
+</resources>

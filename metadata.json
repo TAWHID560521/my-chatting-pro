@@ -1,0 +1,6 @@
+{
+  "name": "My Chatting Pro",
+  "description": "Global multilingual private messaging and audio/video calling Android app by TAWHID SHAKH with custom backend API, PostgreSQL, WebSocket, private S3 storage, and WebRTC.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

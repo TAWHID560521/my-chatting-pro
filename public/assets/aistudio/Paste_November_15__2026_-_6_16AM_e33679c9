@@ -1,0 +1,1591 @@
+============================================================
+MY CHATTING PRO — সম্পূর্ণ PRODUCTION-READY APP PROMPT
+============================================================
+
+আপনি একজন অভিজ্ঞ Flutter + Custom Backend Architect, Android Engineer,
+UI/UX Designer এবং Production App Developer।
+
+আমার জন্য একটি সম্পূর্ণ Production-Ready Global Messaging
+Android Application তৈরি করুন।
+
+অ্যাপের নাম:
+
+MY CHATTING PRO
+
+Developer / Owner:
+
+TAWHID SHAKH
+
+
+============================================================
+১. APP-এর মূল উদ্দেশ্য
+============================================================
+
+My Chatting Pro একটি আধুনিক, Premium, দ্রুত, নিরাপদ এবং
+multilingual private messaging application হবে।
+
+অ্যাপটি Flutter + Dart দিয়ে তৈরি করতে হবে।
+
+Android Studio-তে project খুলে edit করা যাবে।
+
+Project থেকে তৈরি করা যাবে:
+
+- APK
+- AAB
+
+অ্যাপটি Google Play Store publication-এর জন্য প্রস্তুত
+architecture-এ তৈরি করতে হবে।
+
+শুধু Demo UI তৈরি করা যাবে না।
+
+Fake button তৈরি করা যাবে না।
+
+যে feature-এর বাস্তব functionality প্রয়োজন, সেখানে
+বাস্তব functionality তৈরি করতে হবে।
+
+কোনো backend configuration প্রয়োজন হলে সেটা পরিষ্কারভাবে
+document করতে হবে।
+
+অ্যাপের architecture হবে:
+
+- Clean
+- Fast
+- Secure
+- Scalable
+- Maintainable
+- Production-oriented
+
+
+============================================================
+২. TECHNOLOGY STACK
+============================================================
+
+ব্যবহার করতে হবে:
+
+- Flutter
+- Dart
+- Material 3
+- Proper localization
+- Clean Architecture ও modular feature structure
+- Secure Custom Backend API
+- Node.js + TypeScript + Fastify (অথবা সমমানের production-ready backend)
+- PostgreSQL (মূল relational database)
+- Redis (presence, rate limit, short-lived cache ও realtime coordination যেখানে প্রয়োজন)
+- WebSocket (real-time messaging ও call signaling)
+- S3-compatible private object storage (image/video/audio/file)
+- WebRTC (audio/video calling)
+- STUN/TURN server (production call connectivity)
+- Android native notification/channel handling
+- Firebase-এর কোনো SDK, service, database, authentication, storage, messaging বা crash service নয়
+- Google Mobile Ads / AdMob নয়; কোনো Ads SDK বা Ad Unit ID নয়
+
+Backend hosting Render-এ করা যেতে পারে। বর্তমান GTSACM AI backend-এর সঙ্গে এই অ্যাপের backend মিশিয়ে ফেলা বাধ্যতামূলক নয়; MY CHATTING PRO-এর জন্য আলাদা service, database ও environment variables ব্যবহার করো।
+
+Project modular হতে হবে। একটি বিশাল main.dart file-এর মধ্যে সব code রাখা যাবে না।
+
+প্রস্তাবিত Flutter structure:
+
+lib/
+  core/
+    config/
+    models/
+    services/
+    repositories/
+    providers/
+    utils/
+    localization/
+    theme/
+    routing/
+  features/
+    auth/
+    profile/
+    chats/
+    messages/
+    media/
+    calls/
+    groups/
+    settings/
+    privacy/
+    notifications/
+
+Backend-এর জন্য আলাদা folder/repository তৈরি করো:
+backend/
+  src/
+    config/
+    modules/
+    middleware/
+    database/
+    websocket/
+    storage/
+    calls/
+    notifications/
+    security/
+  migrations/
+  tests/
+  README.md
+
+Authentication, Chat, Calls, Storage, Notifications, Settings, Profile ইত্যাদির জন্য আলাদা module ব্যবহার করতে হবে।
+
+============================================================
+৩. APP FLOW
+============================================================
+
+প্রথমবার App চালু হলে:
+
+Splash Screen
+↓
+Welcome Screen
+↓
+Login Screen
+
+
+Welcome Screen হবে:
+
+- Premium
+- Modern
+- Clean
+- Professional
+- Original
+
+দেখাবে:
+
+MY CHATTING PRO
+
+
+দুটি প্রধান option:
+
+Login
+
+Create Account
+
+
+============================================================
+৪. LOGIN SYSTEM
+============================================================
+
+আগে থেকে account থাকা user login করতে পারবে।
+
+Login Screen:
+- Country Selector
+- Phone Number
+- 5-digit PIN
+- Login Button
+
+নিচে ছোট করে:
+"নতুন হলে অ্যাকাউন্ট তৈরি করুন"
+
+Create Account-এ click করলে:
+Phone Number
+↓
+5-digit PIN তৈরি
+↓
+PIN Confirm
+↓
+Create Account
+
+কোনো OTP, SMS verification code, email verification code বা OTP screen থাকবে না।
+
+গুরুত্বপূর্ণ:
+- Login ও account creation Custom Backend API-এর মাধ্যমে হবে।
+- Phone number international format-এ normalize করে unique account identifier হিসেবে ব্যবহার করতে হবে।
+- OTP না থাকায় phone number-এর মালিকানা verified বলে দাবি করা যাবে না।
+- PIN কখনো plain text হিসেবে database-এ সংরক্ষণ করা যাবে না।
+- Backend-এ Argon2id বা সমমানের শক্তিশালী password hashing ব্যবহার করতে হবে; per-user salt থাকতে হবে।
+- 5-digit PIN দুর্বল হতে পারে, তাই strict rate limiting, progressive delay, temporary lockout, device/session controls এবং suspicious-login detection আবশ্যক।
+- Login request HTTPS দিয়ে পাঠাতে হবে।
+- PIN, password বা authentication secret log করা যাবে না।
+- Account recovery-এর জন্য OTP ছাড়াই নিরাপদ, documented recovery workflow দিতে হবে; recovery-তে পরিচয় যাচাই করা সম্ভব না হলে support/manual review বা account recovery সীমাবদ্ধতা স্পষ্ট করতে হবে।
+- Fake login বা fake account creation করা যাবে না।
+- Account তৈরি হলে PostgreSQL-এ user profile তৈরি করতে হবে।
+
+============================================================
+৫. COUNTRY SELECTOR
+============================================================
+
+Global country selector তৈরি করতে হবে।
+
+প্রতিটি country-এর জন্য:
+- Flag
+- Country Name
+- Calling Code
+- Search
+- Country List
+- Popular/Recent Country
+
+উদাহরণ:
+🇧🇩 Bangladesh +880
+🇺🇸 United States +1
+🇬🇧 United Kingdom +44
+
+শুধু Bangladesh hardcode করা যাবে না।
+International country-code dataset/package ব্যবহার করতে হবে।
+Phone number Custom Backend-এ পাঠানোর আগে international E.164 format-এ normalize করতে হবে।
+Phone number ownership verified বলে দেখানো যাবে না, কারণ OTP ব্যবহার করা হবে না।
+
+============================================================
+৬. USER PROFILE
+============================================================
+
+User profile-এ থাকবে:
+
+- Display Name
+- Profile Photo
+- Phone Number
+- About / Status
+
+Profile photo private S3-compatible object storage-এর মাধ্যমে upload করতে হবে।
+
+Profile screen সুন্দর এবং Premium হতে হবে।
+
+Phone number সাধারণভাবে edit করা যাবে না।
+
+Main Chat Screen-এর উপরে:
+
+বাম পাশে:
+Profile Avatar / Profile Icon
+
+ডান পাশে:
+Three-dot Menu
+
+
+============================================================
+৭. MAIN CHAT SCREEN
+============================================================
+
+Login করার পর প্রধান screen হবে:
+CHATS
+
+Chat list-এ দেখাবে:
+- Profile Photo
+- User Name
+- Latest Message
+- Latest Message Time
+- Unread Count
+- Online Status যেখানে প্রয়োজন
+- Message Status যেখানে প্রয়োজন
+
+Backend WebSocket event ও authenticated API ব্যবহার করতে হবে।
+নতুন message এলে manual refresh ছাড়াই chat list update হবে।
+শুধু প্রয়োজনীয় conversation-এর realtime subscription চালু রাখতে হবে।
+UI হবে:
+- Fast
+- Clean
+- Premium
+- Modern
+- Original
+
+============================================================
+৮. BOTTOM NAVIGATION
+============================================================
+
+Bottom Navigation-এ শুধুমাত্র থাকবে:
+
+1. Chats
+2. Add Chat
+3. Settings
+
+
+এই features থাকবে না:
+
+- Stories
+- Channels
+- Public Feed
+- Reels
+- অপ্রয়োজনীয় social media feed
+
+
+অ্যাপের মূল focus হবে private messaging।
+
+
+============================================================
+৯. ADD CHAT
+============================================================
+
+Add Chat Screen-এ থাকবে:
+- Country Code
+- Name (optional search filter)
+- Phone Number
+- Search User
+
+User country select করবে। উদাহরণ:
+🇧🇩 Bangladesh +880
+
+তারপর Name / Phone Number দিতে পারবে।
+
+Search User চাপলে Custom Backend API-তে registered user খুঁজবে।
+সম্পূর্ণ users database device-এ download করা যাবে না।
+যদি user পাওয়া যায়:
+- Profile Photo
+- Name
+- About
+- প্রয়োজনীয় public account information
+- Start Chat
+দেখাবে।
+
+যদি user না পাওয়া যায়:
+"No My Chatting Pro account found."
+দেখাবে।
+
+অন্য user-এর অপ্রয়োজনীয় private information প্রকাশ করা যাবে না।
+Search endpoint-এ authentication, rate limiting ও privacy-preserving response থাকতে হবে।
+
+============================================================
+১০. ONE-TO-ONE CHAT
+============================================================
+
+সম্পূর্ণ realtime one-to-one messaging system তৈরি করতে হবে।
+
+Support:
+
+- Text
+- Long Text
+- Emoji
+- Image
+- Video
+- Voice Message
+- Audio
+- PDF
+- ZIP
+- APK
+- Documents
+- Other appropriate files
+
+
+Message state:
+
+- Sending
+- Sent
+- Delivered
+- Seen / Read
+- Failed
+- Retry
+
+
+প্রতিটি message-এর timestamp থাকতে হবে।
+
+বড় conversation-এর সম্পূর্ণ history একসাথে load করা যাবে না।
+
+Pagination এবং lazy loading ব্যবহার করতে হবে।
+
+
+============================================================
+১১. MESSAGE DATE AND TIME
+============================================================
+
+প্রতিটি message-এর reliable server-side timestamp থাকতে হবে।
+PostgreSQL-এ UTC timestamp with timezone (যেমন TIMESTAMPTZ) canonical timestamp হিসেবে ব্যবহার করতে হবে।
+Backend server timestamp তৈরি করবে; client clock-কে canonical source ধরা যাবে না।
+প্রতিটি message-এর date এবং time display করতে হবে।
+
+উদাহরণ:
+আজ: 10:42 PM
+গতকাল: 8:15 PM
+পুরোনো: 28 Sep 2026, 7:30 PM
+
+============================================================
+১২. DATE SEPARATOR
+============================================================
+
+Conversation-এর মধ্যে date অনুযায়ী message group করতে হবে।
+
+উদাহরণ:
+
+──────── আজ ────────
+
+10:42 PM
+Hello
+
+10:43 PM
+How are you?
+
+
+──────── গতকাল ────────
+
+8:15 PM
+Hello
+
+
+──────── 28 সেপ্টেম্বর 2026 ────────
+
+7:30 PM
+Previous message
+
+
+বাংলা:
+
+আজ
+গতকাল
+২৮ সেপ্টেম্বর ২০২৬
+
+
+English:
+
+Today
+Yesterday
+28 Sep 2026
+
+
+Arabic:
+
+اليوم
+أمس
+28 سبتمبر 2026
+
+
+Arabic-এর জন্য proper RTL support থাকতে হবে।
+
+
+============================================================
+১৩. MESSAGE DETAILS
+============================================================
+
+Message long-press করলে অথবা Message Details খুললে দেখাবে:
+
+- Message
+- Sent Date
+- Sent Time
+- Delivered Date/Time যেখানে available
+- Read Date/Time যেখানে available
+
+Failed message হলে:
+
+Failed
+Retry
+
+
+Retry করলে ভুলভাবে original timestamp পরিবর্তন করা যাবে না।
+
+একটি নতুন message না হলে timestamp নতুন করে তৈরি করা যাবে না।
+
+
+============================================================
+১৪. MESSAGE ORDER
+============================================================
+
+Message order server-side canonical timestamp অনুযায়ী হবে।
+
+Newest message নিচে থাকবে।
+
+Older message pagination-এর মাধ্যমে load হবে।
+
+Realtime PostgreSQL / Backend API update এবং pagination একসাথে কাজ করার সময়:
+
+- Duplicate message তৈরি করা যাবে না
+- Chronological order নষ্ট করা যাবে না
+- Scroll position অপ্রয়োজনে jump করা যাবে না
+
+
+============================================================
+১৫. TIMEZONE
+============================================================
+
+Canonical timestamp server-side থাকবে।
+
+Display time হবে user-এর বর্তমান local timezone অনুযায়ী।
+
+Bangladesh time hardcode করা যাবে না।
+
+একজন user Bangladesh-এ এবং অন্য user অন্য দেশে থাকলেও
+underlying server timestamp একই থাকবে।
+
+প্রতিটি user নিজের local timezone অনুযায়ী date/time দেখবে।
+
+
+============================================================
+১৬. CHAT LIST TIME
+============================================================
+
+Chat list-এ latest message-এর time/date দেখাতে হবে।
+
+আজ:
+
+10:42 PM
+
+গতকাল:
+
+Yesterday
+
+পুরোনো:
+
+28 Sep
+
+
+Language এবং locale অনুযায়ী format পরিবর্তন হবে।
+
+
+============================================================
+১৭. IMAGE MESSAGING
+============================================================
+
+Image পাঠানোর system:
+- Image Picker
+- Preview
+- Compression
+- Upload Progress
+- Cancel
+- Retry
+- Full-screen Viewer
+
+থাকবে।
+
+Image private S3-compatible object storage-এ upload করতে হবে।
+Backend authenticated upload authorization / short-lived presigned URL তৈরি করবে।
+Upload শেষে backend ownership ও conversation membership যাচাই করে media record সংরক্ষণ করবে।
+Public unrestricted bucket বা permanent public URL ব্যবহার করা যাবে না।
+
+============================================================
+১৮. VIDEO MESSAGING
+============================================================
+
+Video পাঠানোর system:
+
+- Video Picker
+- Preview
+- Compression যেখানে প্রয়োজন
+- Upload Progress
+- Cancel
+- Retry
+- Video Player
+- Error Handling
+
+থাকবে।
+
+
+============================================================
+১৯. FILE MESSAGING
+============================================================
+
+Support করতে হবে:
+- PDF
+- ZIP
+- APK
+- DOC/DOCX
+- অন্যান্য সাধারণ documents/files
+
+File message-এ দেখাবে:
+- File Name
+- File Type
+- File Size
+- Upload Progress
+- Download/Open
+- Retry
+
+Private S3-compatible object storage ব্যবহার করতে হবে।
+Upload ও download-এর আগে backend user authentication, conversation membership, file size, MIME type এবং ownership যাচাই করবে।
+Short-lived signed URL ব্যবহার করতে হবে; unrestricted public Storage URL ব্যবহার করা যাবে না।
+Dangerous file type-এর জন্য warning ও download confirmation দেখাতে হবে।
+
+============================================================
+২০. VOICE MESSAGE
+============================================================
+
+বাস্তব voice message system তৈরি করতে হবে।
+
+Features:
+
+- Microphone Permission
+- Record
+- Stop
+- Cancel
+- Playback
+- Upload
+- Upload Progress
+- Duration
+- Error Handling
+
+
+Microphone permission শুধুমাত্র recording-এর প্রয়োজন হলে চাইতে হবে।
+
+
+============================================================
+২১. AUDIO CALL
+============================================================
+
+বাস্তব one-to-one audio calling system তৈরি করতে হবে।
+
+WebRTC অথবা production-ready real-time calling architecture
+ব্যবহার করতে হবে।
+
+Features:
+
+- Incoming Call
+- Outgoing Call
+- Accept
+- Reject
+- End
+- Mute
+- Speaker
+- Call Duration
+- Calling State
+- Reconnecting State
+- Permission Handling
+
+শুধু fake call UI তৈরি করা যাবে না।
+
+
+============================================================
+২২. VIDEO CALL
+============================================================
+
+বাস্তব one-to-one video calling system তৈরি করতে হবে।
+
+Features:
+
+- Incoming Video Call
+- Outgoing Video Call
+- Accept
+- Reject
+- End
+- Front Camera
+- Back Camera
+- Microphone On/Off
+- Camera On/Off
+- Speaker
+- Call Duration
+- Reconnection
+
+
+Camera এবং Microphone permission সঠিকভাবে handle করতে হবে।
+
+
+============================================================
+২৩. PUSH NOTIFICATION
+============================================================
+
+Notification support:
+- New Message
+- Incoming Call
+- Missed Call
+
+FCM, Firebase SDK বা Firebase service ব্যবহার করা যাবে না।
+
+প্রথমে foreground অবস্থায় authenticated WebSocket দিয়ে realtime event পরিচালনা করতে হবে।
+Background/terminated অবস্থায় notification delivery-এর জন্য এমন non-Firebase Android push provider/transport নির্বাচন করতে হবে যার Android support ও delivery guarantee বাস্তবে যাচাই করা হয়েছে।
+কোনো provider যদি Android-এ FCM-এর উপর নির্ভর করে, সেটিকে Firebase-free solution বলে দাবি করা যাবে না এবং ব্যবহারকারীর অনুমতি ছাড়া যোগ করা যাবে না।
+যদি নির্ভরযোগ্য background push-এর জন্য Firebase ছাড়া প্রয়োজনীয় transport পাওয়া না যায়, limitation পরিষ্কারভাবে document করতে হবে; fake incoming-call notification দেখানো যাবে না।
+Android notification channel, permission ও call notification behavior সঠিকভাবে implement করতে হবে।
+Notification-এ অপ্রয়োজনীয় private message content দেখানো যাবে না।
+Handle করতে হবে:
+- Foreground
+- Background
+- Terminated State (শুধু বাস্তবে সমর্থিত push transport থাকলে)
+
+============================================================
+২৪. TOP RIGHT THREE-DOT MENU
+============================================================
+
+Three-dot menu-তে ONLY এই দুটি option থাকবে:
+
+1. Clear Cache
+2. Website
+
+
+এর বাইরে অন্য option রাখা যাবে না।
+
+
+Website:
+
+https://sites.google.com/view/you-pr/%E0%A6%B9%E0%A6%AE
+
+
+Website click করলে external browser-এ খুলবে।
+
+
+============================================================
+২৫. CLEAR CACHE
+============================================================
+
+Clear Cache কখনোই delete করবে না:
+
+- Messages
+- Photos
+- Videos
+- Files
+- Account
+- Chat History
+
+
+শুধু safe temporary cache পরিষ্কার করবে।
+
+যেমন:
+
+- Temporary thumbnails
+- Temporary media cache
+- Temporary downloaded resources
+
+
+Confirmation:
+
+"Temporary cache পরিষ্কার করবেন?"
+
+
+Clear হলে:
+
+"Temporary cache cleared."
+
+
+Clear Cache-কে কখনো Virus Remover হিসেবে দাবি করা যাবে না।
+
+Device-এর virus remove করার functionality আছে এমন দাবি করা যাবে না।
+
+
+============================================================
+২৬. SETTINGS
+============================================================
+
+Settings Screen Premium এবং সুন্দরভাবে সাজানো হবে।
+
+Owner section:
+
+TAWHID SHAKH
+
+
+Owner name user edit করতে পারবে না।
+
+Premium/VIP style-এ display করা যেতে পারে।
+
+
+============================================================
+২৭. LANGUAGE
+============================================================
+
+Application support করবে:
+
+বাংলা
+English
+العربية
+
+
+Language selector সরাসরি Settings-এর মধ্যে থাকবে।
+
+Language change করলে পুরো application-এর user-facing text
+পরিবর্তন হবে।
+
+Arabic হলে:
+
+- Proper RTL
+- Proper alignment
+- Proper text direction
+
+
+ব্যবহার করতে হবে।
+
+Localization resource ব্যবহার করতে হবে।
+
+Hardcoded UI text কমাতে হবে।
+
+
+============================================================
+২৮. YOUTUBE
+============================================================
+
+Settings-এ YouTube option থাকবে।
+
+Label:
+
+সাবস্ক্রাইব করুন
+
+
+Link:
+
+https://www.youtube.com/channel/UClRY5eaWzQbXG2y2E5xcYdg
+
+
+Click করলে external browser-এ খুলবে।
+
+
+============================================================
+২৯. FACEBOOK
+============================================================
+
+Facebook Profile option থাকবে।
+
+Link:
+
+https://www.facebook.com/profile.php?id=61584997594783
+
+
+Click করলে external browser-এ খুলবে।
+
+
+============================================================
+৩০. FEEDBACK EMAIL
+============================================================
+
+Settings-এ:
+
+Feedback
+
+
+Email:
+
+hafeztawhid15@gmail.com
+
+
+Click করলে device-এর mail application open করার চেষ্টা করবে।
+
+
+============================================================
+৩১. PRIVACY POLICY
+============================================================
+
+Settings-এ Privacy Policy থাকবে।
+
+Link:
+
+https://sites.google.com/view/your-wab/%E0%A6%B9%E0%A6%AE
+
+
+Click করলে external browser-এ খুলবে।
+
+
+============================================================
+৩২. VERSION AND VERSION CODE
+============================================================
+
+Settings Screen-এ Version এবং Version Code সবসময় বড় করে
+দেখানো যাবে না।
+
+একটি Version option থাকবে।
+
+Click করলে popup/dialog খুলবে।
+
+সেখানে dynamically দেখাবে:
+
+Version
+Version Code
+
+
+Package/application metadata থেকে dynamically নিতে হবে।
+
+Hardcode করা যাবে না।
+
+Version Code পরিবর্তন করলে application-এর displayed value
+সঠিকভাবে update হতে হবে।
+
+
+============================================================
+৩৩. ACCOUNT DELETION
+============================================================
+
+Settings-এ:
+Delete Account option থাকতে হবে।
+
+Delete করার আগে clear confirmation dialog দেখাতে হবে।
+Confirmation-এর পরে:
+- Custom Backend account deletion endpoint call
+- Active sessions / refresh tokens revoke
+- User-associated profile ও backend data retention policy অনুযায়ী delete
+- User-associated private media ও object storage files safely remove
+- User-এর conversations ও messages-এর deletion/anonymization policy আগে থেকে পরিষ্কারভাবে নির্ধারণ
+- Applicable legal retention থাকলে সেটি user-কে জানানো
+
+শুধু account disable করা যাবে না।
+Backend/data model account deletion-এর জন্য প্রস্তুত রাখতে হবে।
+Deletion request-এর ফলাফল server থেকে verify না করে success দেখানো যাবে না।
+
+============================================================
+৩৪. USER SAFETY
+============================================================
+
+Messaging application হওয়ায় থাকতে হবে:
+
+- Block User
+- Report User
+- Report Message
+- Delete Own Message যেখানে appropriate
+- Basic Abuse Report Workflow
+
+
+One-to-one conversation-এ user অন্য user-কে block করতে পারবে।
+
+Public social feed তৈরি করা যাবে না।
+
+
+============================================================
+৪৬. PERFORMANCE
+============================================================
+
+Application দ্রুত এবং responsive হতে হবে।
+
+ব্যবহার করতে হবে:
+- Backend pagination
+- Lazy loading
+- Image compression
+- Thumbnail generation
+- Upload progress
+- Retry logic
+- Cached profile images
+- Cached thumbnails
+- Debounced search
+- Efficient state management
+- Efficient WebSocket subscription lifecycle
+- Unnecessary rebuild বন্ধ
+- Large media memory-তে একসাথে load না করা
+- Controller dispose
+- Stream cancel
+- Subscription cancel
+- Network loss handling
+- PostgreSQL indexing ও query optimization
+- Redis cache কেবল প্রয়োজন অনুযায়ী
+
+সম্পূর্ণ conversation history একসাথে memory-তে load করা যাবে না।
+
+============================================================
+৪৭. OFFLINE / NETWORK HANDLING
+============================================================
+
+Handle করতে হবে:
+- No Internet
+- Slow Internet
+- Upload Failure
+- Download Failure
+- Backend API Failure
+- Database Failure
+- Object Storage Failure
+- WebSocket Disconnect
+- Call Connection Failure
+
+Network না থাকলেও app crash করবে না।
+প্রয়োজনে professional offline/network status indicator দেখাতে হবে।
+Pending message local queue-তে রাখতে হলে clear pending state দেখাতে হবে; server acknowledgement ছাড়া Sent/Delivered দেখানো যাবে না।
+
+============================================================
+৪৮. SECURITY
+============================================================
+
+Production-oriented backend security implement করতে হবে।
+
+কখনো anonymous unrestricted access দেওয়া যাবে না।
+- HTTPS বাধ্যতামূলক।
+- Access token ও refresh token নিরাপদভাবে পরিচালনা করতে হবে।
+- Backend-এ authentication ও authorization যাচাই করতে হবে।
+- User শুধুমাত্র নিজের অনুমোদিত data access করতে পারবে।
+- Conversation-এর member ছাড়া অন্য কেউ conversation access করতে পারবে না।
+- File upload-এর ownership validate করতে হবে।
+- Private media unauthorized user access করতে পারবে না।
+- Rate limiting, request validation, abuse protection ও audit logging থাকতে হবে।
+- Database credentials, storage secret, signing key বা অন্য secret APK-তে রাখা যাবে না।
+- SQL injection, IDOR, replay, brute force ও session theft প্রতিরোধের ব্যবস্থা রাখতে হবে।
+- End-to-End Encryption বাস্তবে যাচাই করা ও পরীক্ষিত protocol দিয়ে implement করতে হবে; শুধু HTTPS-কে E2EE বলা যাবে না।
+
+============================================================
+৪৯. DATABASE DATA ARCHITECTURE
+============================================================
+
+PostgreSQL-ভিত্তিক scalable architecture ব্যবহার করতে হবে।
+
+প্রস্তাবিত entities/tables:
+- users
+- user_profiles
+- devices
+- sessions
+- conversations
+- conversation_members
+- messages
+- message_receipts
+- media_objects
+- calls
+- call_participants
+- reports
+- blocked_users
+- notification_endpoints (শুধু সমর্থিত non-Firebase transport থাকলে)
+
+প্রয়োজন অনুযায়ী schema optimize করা যাবে।
+Foreign key, unique constraint, indexes, transaction ও retention policy ব্যবহার করতে হবে।
+Database migration version control-এ রাখতে হবে।
+Final architecture README/documentation-এ explain করতে হবে।
+
+============================================================
+৫০. PRIVATE OBJECT STORAGE
+============================================================
+
+Secure private object storage structure:
+
+users/{userId}/profile/
+conversations/{conversationId}/images/
+conversations/{conversationId}/videos/
+conversations/{conversationId}/audio/
+conversations/{conversationId}/files/
+
+S3-compatible private bucket ব্যবহার করতে হবে।
+Authenticated backend authorization ও short-lived signed URL ব্যবহার করতে হবে।
+Conversation membership ও object ownership যাচাই ছাড়া upload/download অনুমোদন করা যাবে না।
+Public unrestricted media access দেওয়া যাবে না।
+
+============================================================
+৫১. PERMISSIONS
+============================================================
+
+Permission শুধুমাত্র প্রয়োজনের সময় চাইতে হবে।
+
+সম্ভাব্য permission:
+
+- Camera
+- Microphone
+- Notifications
+- Photos/Media
+- File access
+
+
+First launch-এই সব permission একসাথে চাওয়া যাবে না।
+
+যে permission চাইবে তার কারণ user-friendly ভাষায় বোঝাতে হবে।
+
+
+============================================================
+৫২. PREMIUM UI
+============================================================
+
+Design হবে:
+
+- Premium
+- Modern
+- Clean
+- Professional
+- Original
+- Fast
+- Smooth
+- Accessible
+- Material 3
+- Light Mode
+- Dark Mode
+
+
+WhatsApp, IMO, Telegram বা অন্য কোনো app-এর exact UI
+বা branding copy করা যাবে না।
+
+নিজস্ব My Chatting Pro identity থাকতে হবে।
+
+
+============================================================
+৫৩. LIGHT / DARK MODE
+============================================================
+
+Application-এ:
+
+Light Mode
+Dark Mode
+
+
+দুটিই থাকতে হবে।
+
+UI-এর সমস্ত screen দুই mode-এ সুন্দরভাবে কাজ করতে হবে।
+
+Text contrast এবং accessibility ঠিক রাখতে হবে।
+
+
+============================================================
+৫৪. ERROR HANDLING
+============================================================
+
+Handle করতে হবে:
+- Invalid Phone Number
+- Wrong PIN
+- Account Not Found
+- Duplicate Account
+- Login Rate Limit / Temporary Lock
+- Network Failure
+- Backend API Failure
+- Database Failure
+- Object Storage Failure
+- Message Send Failure
+- Call Failure
+- Permission Denied
+- Notification Failure
+
+User-friendly localized error message দেখাতে হবে।
+Raw stack trace user-কে দেখানো যাবে না।
+Empty catch block ব্যবহার করা যাবে না।
+OTP-related error বা screen থাকবে না।
+
+============================================================
+৫৫. LOGGING
+============================================================
+
+Development-এর সময় structured logging ব্যবহার করতে হবে।
+
+Production-এ sensitive logging বন্ধ রাখতে হবে।
+
+কখনো log করা যাবে না:
+
+- OTP
+- PIN
+- Password
+- Private Message Content
+- Private File URL
+- Sensitive User Information
+
+
+============================================================
+৫৬. ERROR REPORTING
+============================================================
+
+Firebase Crashlytics বা অন্য কোনো Firebase crash service ব্যবহার করা যাবে না।
+
+Backend structured logs এবং privacy-safe crash/error reporting mechanism ব্যবহার করতে হবে।
+Sensitive data, PIN, token, private message content বা private file URL log করা যাবে না।
+Expected errors properly handle করতে হবে।
+Global crash suppression ব্যবহার করা যাবে না।
+Crash লুকিয়ে না রেখে মূল programming problem ঠিক করতে হবে।
+Crash reporting provider নির্বাচন করলে Firebase dependency আছে কি না যাচাই করে তবেই ব্যবহার করতে হবে।
+
+============================================================
+৫৭. ACCOUNT PRIVACY
+============================================================
+
+User privacy গুরুত্ব সহকারে implement করতে হবে।
+
+Private message অন্য user দেখতে পারবে না।
+
+Private media unauthorized access করা যাবে না।
+
+Phone number প্রয়োজনের বাইরে public করা যাবে না।
+
+Notification-এ sensitive private message content avoid করতে হবে।
+
+
+============================================================
+৫৮. SEARCH
+============================================================
+
+Add Chat-এর user search system efficient হতে হবে।
+
+Debounced search ব্যবহার করতে হবে।
+
+প্রয়োজন ছাড়া সম্পূর্ণ users collection download করা যাবে না।
+
+Search architecture scalable হতে হবে।
+
+
+============================================================
+৫৯. MESSAGE RETRY
+============================================================
+
+Message send failure হলে:
+
+Failed
+
+Retry
+
+
+দেখাতে হবে।
+
+Retry করলে একই message duplicate তৈরি করা যাবে না।
+
+নতুন message তৈরি করার প্রয়োজন না হলে original message-এর
+canonical timestamp অকারণে পরিবর্তন করা যাবে না।
+
+
+============================================================
+৬০. MESSAGE PAGINATION
+============================================================
+
+Conversation-এর older messages backend cursor pagination-এর মাধ্যমে load হবে।
+প্রথমে latest messages load করতে হবে।
+User উপরের দিকে scroll করলে older messages load হবে।
+Realtime WebSocket event এবং pagination merge করার সময়:
+- Duplicate হবে না
+- Ordering নষ্ট হবে না
+- Scroll position যতটা সম্ভব preserve করতে হবে
+- Stable message ID ও canonical server timestamp ব্যবহার করতে হবে।
+
+============================================================
+৬১. CHAT LIST REALTIME
+============================================================
+
+নতুন message এলে:
+- Latest message update
+- Latest time update
+- Unread count update
+- Conversation position update
+
+সবকিছু authenticated WebSocket event ও backend API-এর মাধ্যমে realtime হবে।
+User-এর প্রয়োজন অনুযায়ী efficient subscriptions ব্যবহার করতে হবে।
+Reconnect হলে last acknowledged event/cursor থেকে sync করতে হবে; duplicate event এলে idempotently handle করতে হবে।
+
+============================================================
+৬২. INTERNATIONALIZATION
+============================================================
+
+সব user-facing text localization system-এর মাধ্যমে
+পরিচালনা করতে হবে।
+
+Languages:
+
+বাংলা
+English
+العربية
+
+
+Arabic:
+
+- RTL
+- Correct alignment
+- Correct layout direction
+
+
+Date/time-ও selected locale অনুযায়ী format করতে হবে।
+
+
+============================================================
+৬৩. PLAY STORE READINESS
+============================================================
+
+Project-এ থাকতে হবে:
+- Proper Application ID
+- Version
+- Version Code
+- Release Configuration
+- Privacy Policy
+- Account Deletion
+- Data Safety consideration
+- Permission declaration
+- User-generated content safety
+- Backend security checklist
+- Data retention ও account deletion policy
+- Audio/video call permission disclosures
+
+কোনো Ads SDK বা Ads declaration এখন implement করা হবে না।
+Google Play Store approval-এর 100% guarantee দেওয়া যাবে না।
+বরং Play Store checklist তৈরি করতে হবে।
+
+============================================================
+৬৪. PROJECT FILES
+============================================================
+
+Final project-এর মধ্যে থাকতে হবে:
+
+Flutter:
+- pubspec.yaml
+- Android configuration
+- Localization configuration
+- APK/AAB build instructions
+
+Backend:
+- Backend source code
+- PostgreSQL schema ও migrations
+- REST API documentation
+- WebSocket event documentation
+- Private object storage setup
+- Environment variable template (.env.example; কোনো real secret নয়)
+- Backend deployment instructions
+- Rate limit ও security configuration
+
+সাধারণ:
+- README.md
+- APK build instructions
+- AAB build instructions
+- Play Store checklist
+- Required manual configuration
+- Testing instructions
+
+কোনো Custom Backend configuration file, google-services.json, Firebase rules বা Firebase setup step তৈরি/চাওয়া যাবে না।
+কোনো AdMob configuration, Ad Unit ID, Ads SDK বা Ads setup step থাকবে না।
+Real credentials repository বা APK-তে রাখা যাবে না।
+
+============================================================
+৬৫. SECRET / CREDENTIAL SECURITY
+============================================================
+
+Sensitive secret source code-এ hardcode করা যাবে না।
+Private credentials public repository-তে রাখা যাবে না।
+Backend environment variables / secret manager ব্যবহার করতে হবে।
+Database password, JWT signing secret, storage access key ও TURN credentials শুধু server-side থাকবে।
+APK-তে শুধু public API base URL-এর মতো non-secret configuration থাকতে পারে।
+কোনো Firebase secret বা AdMob ID/configuration থাকবে না।
+
+============================================================
+৬৬. NO FAKE FUNCTIONALITY
+============================================================
+
+নিচের কোনো functionality fake করা যাবে না:
+- Login
+- Account Creation
+- PIN Authentication
+- Messaging
+- File Upload
+- Image Upload
+- Video Upload
+- Voice Message
+- Audio Call
+- Video Call
+- Background Notification
+- Account Deletion
+
+যদি কোনো external service configuration ছাড়া কোনো feature সম্পূর্ণভাবে চালানো সম্ভব না হয়, তাহলে:
+1. Code structure বাস্তব রাখতে হবে।
+2. Required configuration পরিষ্কারভাবে দেখাতে হবে।
+3. Fake success দেখানো যাবে না।
+4. User-কে ভুলভাবে বলা যাবে না যে feature কাজ করছে।
+5. Firebase বা Ads integration যোগ করে gap পূরণ করা যাবে না।
+
+============================================================
+৬৭. NO UNNECESSARY FEATURES
+============================================================
+
+অ্যাপে অপ্রয়োজনীয় feature যোগ করা যাবে না।
+
+বিশেষভাবে থাকবে না:
+
+- Stories
+- Channels
+- Public Feed
+- Reels
+- Random social feed
+- Unnecessary games
+- Unnecessary public content
+
+
+Core messaging experience-কে priority দিতে হবে।
+
+
+============================================================
+৬৮. FINAL QUALITY REQUIREMENT
+============================================================
+
+Final app:
+
+- Fast
+- Stable
+- Secure
+- Premium
+- Professional
+- Responsive
+- Scalable
+- Maintainable
+
+
+হতে হবে।
+
+Screen transition smooth হতে হবে।
+
+Loading state থাকতে হবে।
+
+Empty state থাকতে হবে।
+
+Error state থাকতে হবে।
+
+Retry state থাকতে হবে।
+
+No-data state থাকতে হবে।
+
+
+============================================================
+৬৯. FINAL PROJECT OUTPUT
+============================================================
+
+Project তৈরি করার পর অবশ্যই দেখাতে হবে:
+
+1. সম্পূর্ণ Project Tree
+2. সম্পূর্ণ Source Code
+3. pubspec.yaml
+4. Android Configuration
+5. Backend Setup
+6. PostgreSQL Schema ও Migrations
+7. REST API Documentation
+8. WebSocket Event Documentation
+9. Private Object Storage Setup
+10. Localization Configuration
+11. Environment Variable Setup
+12. Build Instructions
+13. APK Build Command
+14. AAB Build Command
+15. Play Store Checklist
+16. Required Manual Configuration
+17. Known Limitations
+18. Testing Instructions
+
+"same as above" লিখে গুরুত্বপূর্ণ code বাদ দেওয়া যাবে না।
+Pseudo-code দিয়ে production feature replace করা যাবে না।
+কোনো Firebase বা Ads setup output দেওয়া যাবে না।
+
+============================================================
+৭০. BUILD REQUIREMENT
+============================================================
+
+Android Studio থেকে project open করার পর:
+
+flutter pub get
+
+তারপর:
+
+flutter analyze
+
+তারপর প্রয়োজনীয় test/build চালাতে হবে।
+
+APK:
+
+flutter build apk --release
+
+AAB:
+
+flutter build appbundle --release
+
+
+Build configuration অনুযায়ী প্রয়োজনীয় command documentation-এ
+দিতে হবে।
+
+যদি কোনো build error থাকে, সেটা লুকানো যাবে না।
+
+Error-এর কারণ এবং exact fix দেখাতে হবে।
+
+
+============================================================
+৭১. TESTING REQUIREMENT
+============================================================
+
+কমপক্ষে test করতে হবে:
+- App launch
+- Welcome
+- Login
+- Account creation
+- PIN flow
+- Country selection
+- User search
+- Chat creation
+- Text message
+- Message timestamp
+- Date separator
+- Image
+- Video
+- File
+- Voice message
+- Message retry
+- Seen status
+- Block
+- Report
+- Supported notification transport
+- Audio call
+- Video call
+- Settings
+- Language
+- Arabic RTL
+- Privacy Policy
+- Website
+- YouTube
+- Facebook
+- Feedback
+- Delete Account
+- Clear Cache
+- Offline / reconnect
+- Backend authorization
+- Private media access control
+- Release build
+
+OTP, Firebase ও Ads test থাকবে না, কারণ এগুলো অ্যাপে থাকবে না।
+
+============================================================
+৭৪. FINAL APP IDENTITY
+============================================================
+
+Application Name:
+MY CHATTING PRO
+
+Developer:
+TAWHID SHAKH
+
+Supported Languages:
+বাংলা
+English
+العربية
+
+Core Features:
+- Custom Backend Login
+- Phone Number + PIN (কোনো OTP নয়)
+- Global Country Selector
+- User Search
+- One-to-One Chat
+- Text
+- Emoji
+- Image
+- Video
+- Voice Message
+- PDF
+- ZIP
+- APK
+- Documents
+- Message Status
+- Message Date
+- Message Time
+- Date Separator
+- Message Details
+- Message Retry
+- Audio Call
+- Video Call
+- Supported Push Notification (শুধু বাস্তব non-Firebase transport থাকলে)
+- Block
+- Report
+- Delete Own Message
+- Account Delete
+- Privacy Policy
+- Website
+- YouTube
+- Facebook
+- Feedback Email
+- Light Mode
+- Dark Mode
+- Bangla
+- English
+- Arabic RTL
+- Secure Custom Backend
+- PostgreSQL
+- WebSocket
+- Private Object Storage
+- WebRTC
+
+Firebase থাকবে না।
+OTP থাকবে না।
+Ads/AdMob থাকবে না।
+
+============================================================
+৭৫. FINAL INSTRUCTION TO AI
+============================================================
+
+এখন উপরোক্ত সমস্ত requirement অনুসরণ করে সম্পূর্ণ My Chatting Pro application তৈরি করুন।
+
+কোনো requirement বাদ দেবেন না।
+কোনো feature নিজের ইচ্ছায় বাদ দেবেন না।
+কোনো fake functionality তৈরি করবেন না।
+কোনো insecure backend rule ব্যবহার করবেন না।
+কোনো hardcoded secret ব্যবহার করবেন না।
+কোনো unnecessary social feature যোগ করবেন না।
+
+Firebase-এর কোনো SDK, service, product, configuration বা dependency ব্যবহার করবেন না।
+OTP বা SMS verification flow তৈরি করবেন না।
+AdMob, Banner, Interstitial, Ads SDK, Ad Unit ID বা Ads code যোগ করবেন না।
+
+Authentication, PostgreSQL database, private object storage, WebSocket messaging এবং WebRTC calling Custom Backend দিয়ে বাস্তবভাবে implement করুন।
+Message date/time server-side canonical timestamp ভিত্তিক করুন।
+Bangla, English এবং Arabic localization সম্পূর্ণ করুন।
+Arabic RTL সম্পূর্ণভাবে কাজ করান।
+Project modular রাখুন।
+Code clean, secure এবং maintainable রাখুন।
+
+Project Android Studio-তে open, configure, test, APK build এবং AAB build করার উপযোগী হতে হবে।
+যেখানে developer-এর manual backend, storage, TURN server বা platform configuration প্রয়োজন, সেখানে exact step-by-step instruction দিতে হবে।
+
+শেষে দেখাতে হবে:
+- Project Tree
+- Important Files
+- Backend Setup
+- PostgreSQL Setup
+- Private Storage Setup
+- API Documentation
+- WebSocket Documentation
+- Security Configuration
+- Build Steps
+- APK Command
+- AAB Command
+- Testing Checklist
+- Play Store Checklist
+- Manual Configuration
+- Known Limitations
+
+============================================================
+END OF MY CHATTING PRO PROMPT
+============================================================
+
+============================================================
+END OF MY CHATTING PRO PROMPT
+============================================================

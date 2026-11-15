@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">My Chatting Pro</string>
+    <string name="notification_channel_messages">الرسائل الخاصة</string>
+    <string name="notification_channel_calls">المكالمات الواردة والجارية</string>
+    <string name="notification_channel_missed_calls">مكالمات فائتة</string>
+    <string name="new_message_privacy_safe">لديك رسالة خاصة جديدة</string>
+    <string name="incoming_call_privacy_safe">مكالمة واردة على My Chatting Pro</string>
+    <string name="missed_call_privacy_safe">مكالمة فائتة</string>
+</resources>
