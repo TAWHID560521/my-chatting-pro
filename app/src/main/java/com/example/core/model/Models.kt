@@ -12,8 +12,25 @@ enum class MessageDeliveryStatus {
 }
 
 @JsonClass(generateAdapter = true)
+data class RegisterRequestOtpBody(
+    @Json(name = "phone_e164") val phoneE164: String,
+    @Json(name = "email") val email: String
+)
+
+@JsonClass(generateAdapter = true)
+data class RequestOtpResponse(
+    @Json(name = "ok") val ok: Boolean = true,
+    @Json(name = "challenge_id") val challengeId: String,
+    @Json(name = "masked_email") val maskedEmail: String,
+    @Json(name = "expires_in_seconds") val expiresInSeconds: Int = 600
+)
+
+@JsonClass(generateAdapter = true)
 data class RegisterRequest(
     @Json(name = "phone_e164") val phoneE164: String,
+    @Json(name = "email") val email: String,
+    @Json(name = "otp_challenge_id") val otpChallengeId: String,
+    @Json(name = "otp_code") val otpCode: String,
     @Json(name = "pin") val pin: String,
     @Json(name = "display_name") val displayName: String,
     @Json(name = "device_name") val deviceName: String,
@@ -25,7 +42,24 @@ data class LoginRequest(
     @Json(name = "phone_e164") val phoneE164: String,
     @Json(name = "pin") val pin: String,
     @Json(name = "device_name") val deviceName: String,
-    @Json(name = "device_public_key") val devicePublicKey: String
+    @Json(name = "device_public_key") val devicePublicKey: String,
+    @Json(name = "otp_challenge_id") val otpChallengeId: String? = null,
+    @Json(name = "otp_code") val otpCode: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class RecoveryRequestOtpBody(
+    @Json(name = "phone_e164") val phoneE164: String,
+    @Json(name = "email") val email: String
+)
+
+@JsonClass(generateAdapter = true)
+data class RecoveryResetPinBody(
+    @Json(name = "phone_e164") val phoneE164: String,
+    @Json(name = "email") val email: String,
+    @Json(name = "otp_challenge_id") val otpChallengeId: String,
+    @Json(name = "otp_code") val otpCode: String,
+    @Json(name = "new_pin") val newPin: String
 )
 
 @JsonClass(generateAdapter = true)
@@ -35,11 +69,71 @@ data class RefreshTokenRequest(
 
 @JsonClass(generateAdapter = true)
 data class AuthResponse(
-    @Json(name = "access_token") val accessToken: String,
-    @Json(name = "refresh_token") val refreshToken: String,
-    @Json(name = "device_id") val deviceId: String,
-    @Json(name = "user") val user: UserProfileDto,
+    @Json(name = "requires_otp") val requiresOtp: Boolean = false,
+    @Json(name = "challenge_id") val challengeId: String? = null,
+    @Json(name = "masked_email") val maskedEmail: String? = null,
+    @Json(name = "expires_in_seconds") val expiresInSeconds: Int? = null,
+    @Json(name = "access_token") val accessToken: String? = null,
+    @Json(name = "refresh_token") val refreshToken: String? = null,
+    @Json(name = "device_id") val deviceId: String? = null,
+    @Json(name = "user") val user: UserProfileDto? = null,
     @Json(name = "suspicious_login_notice") val suspiciousLoginNotice: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class ActiveSessionDto(
+    @Json(name = "session_id") val sessionId: String,
+    @Json(name = "device_id") val deviceId: String,
+    @Json(name = "device_name") val deviceName: String,
+    @Json(name = "is_current") val isCurrent: Boolean = false,
+    @Json(name = "created_at") val createdAt: String,
+    @Json(name = "last_seen_at") val lastSeenAt: String
+)
+
+@JsonClass(generateAdapter = true)
+data class ActiveSessionsResponse(
+    @Json(name = "current_device_id") val currentDeviceId: String,
+    @Json(name = "email_masked") val emailMasked: String? = null,
+    @Json(name = "email_verified") val emailVerified: Boolean = false,
+    @Json(name = "require_login_otp") val requireLoginOtp: Boolean = true,
+    @Json(name = "sessions") val sessions: List<ActiveSessionDto> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class RevokeSessionResponse(
+    @Json(name = "ok") val ok: Boolean = true,
+    @Json(name = "revoked_device_id") val revokedDeviceId: String? = null,
+    @Json(name = "was_current_device") val wasCurrentDevice: Boolean = false
+)
+
+@JsonClass(generateAdapter = true)
+data class RevokeOtherSessionsResponse(
+    @Json(name = "ok") val ok: Boolean = true,
+    @Json(name = "revoked_count") val revokedCount: Int = 0
+)
+
+@JsonClass(generateAdapter = true)
+data class ToggleLoginOtpBody(
+    @Json(name = "require_login_otp") val requireLoginOtp: Boolean
+)
+
+@JsonClass(generateAdapter = true)
+data class BindEmailRequestOtpBody(
+    @Json(name = "email") val email: String
+)
+
+@JsonClass(generateAdapter = true)
+data class BindEmailVerifyBody(
+    @Json(name = "email") val email: String,
+    @Json(name = "otp_challenge_id") val otpChallengeId: String,
+    @Json(name = "otp_code") val otpCode: String
+)
+
+@JsonClass(generateAdapter = true)
+data class BindEmailVerifyResponse(
+    @Json(name = "ok") val ok: Boolean = true,
+    @Json(name = "email_masked") val emailMasked: String? = null,
+    @Json(name = "email_verified") val emailVerified: Boolean = true
 )
 
 @JsonClass(generateAdapter = true)
@@ -47,6 +141,8 @@ data class UserProfileDto(
     @Json(name = "id") val id: String,
     @Json(name = "phone_e164") val phoneE164: String,
     @Json(name = "phone_verified") val phoneVerified: Boolean = false,
+    @Json(name = "email_verified") val emailVerified: Boolean = false,
+    @Json(name = "email_masked") val emailMasked: String? = null,
     @Json(name = "display_name") val displayName: String,
     @Json(name = "about") val about: String = "",
     @Json(name = "avatar_url") val avatarUrl: String? = null,
@@ -136,9 +232,9 @@ data class SendMessageRequest(
 
 @JsonClass(generateAdapter = true)
 data class PresignUploadRequest(
-    @Json(name = "scope") val scope: String, // "profile" or "conversation"
+    @Json(name = "scope") val scope: String,
     @Json(name = "conversation_id") val conversationId: String? = null,
-    @Json(name = "media_category") val mediaCategory: String, // "profile", "images", "videos", "audio", "files"
+    @Json(name = "media_category") val mediaCategory: String,
     @Json(name = "file_name") val fileName: String,
     @Json(name = "mime_type") val mimeType: String,
     @Json(name = "size_bytes") val sizeBytes: Long
@@ -216,7 +312,8 @@ data class NotificationEndpointRequest(
 
 @JsonClass(generateAdapter = true)
 data class RecoveryInfoResponse(
-    @Json(name = "otp_enabled") val otpEnabled: Boolean = false,
+    @Json(name = "otp_enabled") val otpEnabled: Boolean = true,
+    @Json(name = "otp_channel") val otpChannel: String? = "email",
     @Json(name = "policy_summary") val policySummary: String,
     @Json(name = "support_email") val supportEmail: String
 )

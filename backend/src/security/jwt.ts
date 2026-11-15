@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { Redis } from 'ioredis';
 import type { AppEnv } from '../config/env.js';
 
 export interface AccessTokenClaims {
@@ -50,7 +51,25 @@ export function sha256Hex(value: string): string {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
-export function createAuthGuard(env: AppEnv) {
+export async function markDeviceRevokedInRedis(
+  redis: Redis,
+  deviceId: string,
+  env: AppEnv
+): Promise<void> {
+  const ttl = Math.max(120, env.JWT_ACCESS_TTL_SECONDS + 180);
+  await redis.set(`revoked:did:${deviceId}`, '1', 'EX', ttl);
+}
+
+export async function isDeviceRevokedInRedis(
+  redis: Redis | undefined,
+  deviceId: string
+): Promise<boolean> {
+  if (!redis || !deviceId) return false;
+  const val = await redis.get(`revoked:did:${deviceId}`);
+  return val === '1';
+}
+
+export function createAuthGuard(env: AppEnv, redis?: Redis) {
   return async function authenticate(request: FastifyRequest, reply: FastifyReply) {
     const authHeader = request.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -59,6 +78,12 @@ export function createAuthGuard(env: AppEnv) {
     const token = authHeader.slice('Bearer '.length).trim();
     try {
       const claims = verifyAccessToken(token, env);
+      if (await isDeviceRevokedInRedis(redis, claims.did)) {
+        return reply.code(401).send({
+          error: 'Session has been revoked from another device. Please log in again.',
+          code: 'SESSION_REVOKED'
+        });
+      }
       (request as FastifyRequest & { auth: AccessTokenClaims }).auth = claims;
     } catch {
       return reply.code(401).send({ error: 'Invalid or expired access token', code: 'TOKEN_INVALID' });

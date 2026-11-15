@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type pg from 'pg';
+import type { Redis } from 'ioredis';
 import { z } from 'zod';
 import type { AppEnv } from '../../config/env.js';
 import type { PrivateS3Storage } from '../../storage/s3.js';
@@ -22,11 +23,12 @@ const sendMessageSchema = z.object({
 export function registerChatRoutes(
   app: FastifyInstance,
   pool: pg.Pool,
+  redis: Redis,
   storage: PrivateS3Storage,
   wsGateway: WsGateway,
   env: AppEnv
 ) {
-  const authGuard = createAuthGuard(env);
+  const authGuard = createAuthGuard(env, redis);
 
   app.get('/api/v1/conversations', { preHandler: authGuard }, async (request, reply) => {
     const auth = (request as typeof request & { auth: AccessTokenClaims }).auth;

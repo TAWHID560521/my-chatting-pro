@@ -29,7 +29,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MarkEmailRead
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Pin
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -82,16 +84,21 @@ fun LoginScreen(
     var showCountrySheet by remember { mutableStateOf(false) }
     var pinVisible by remember { mutableStateOf(false) }
 
+    val effectiveStep = if (state.requiresLoginOtpStep) 2 else currentStep
+
     val handleStepBack: () -> Unit = {
         viewModel.clearError()
-        if (currentStep > 0) {
+        if (state.requiresLoginOtpStep) {
+            viewModel.clearLoginOtpStep()
+            currentStep = 1
+        } else if (currentStep > 0) {
             currentStep -= 1
         } else {
             onBack()
         }
     }
 
-    BackHandler(enabled = currentStep > 0, onBack = handleStepBack)
+    BackHandler(enabled = effectiveStep > 0, onBack = handleStepBack)
 
     Scaffold(
         topBar = {
@@ -119,15 +126,15 @@ fun LoginScreen(
                     .padding(horizontal = 24.dp, vertical = 16.dp)
             ) {
                 AuthStepProgressHeader(
-                    currentStep = currentStep,
-                    totalSteps = 2,
+                    currentStep = effectiveStep,
+                    totalSteps = if (state.requiresLoginOtpStep) 3 else 2,
                     strings = strings
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 AnimatedContent(
-                    targetState = currentStep,
+                    targetState = effectiveStep,
                     transitionSpec = {
                         if (targetState > initialState) {
                             (slideInHorizontally { it / 3 } + fadeIn())
@@ -204,21 +211,7 @@ fun LoginScreen(
                                         .testTag("login_phone_input")
                                 )
 
-                                if (state.errorMessage != null) {
-                                    Spacer(modifier = Modifier.height(14.dp))
-                                    Surface(
-                                        color = MaterialTheme.colorScheme.errorContainer,
-                                        shape = RoundedCornerShape(14.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(
-                                            text = state.errorMessage!!,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onErrorContainer,
-                                            modifier = Modifier.padding(14.dp)
-                                        )
-                                    }
-                                }
+                                LoginErrorBanner(state.errorMessage)
 
                                 Spacer(modifier = Modifier.height(26.dp))
 
@@ -261,7 +254,7 @@ fun LoginScreen(
                                 }
                             }
 
-                            else -> {
+                            1 -> {
                                 SelectedPhonePill(
                                     flagEmoji = state.selectedCountry.flagEmoji,
                                     phoneE164 = viewModel.formattedPhonePreview(),
@@ -283,7 +276,7 @@ fun LoginScreen(
 
                                 Spacer(modifier = Modifier.height(20.dp))
 
-                                PinDotProgressRow(enteredCount = state.pinInput.length)
+                                PinDotProgressRow(enteredCount = state.pinInput.length, totalDigits = 5)
 
                                 Spacer(modifier = Modifier.height(18.dp))
 
@@ -310,21 +303,7 @@ fun LoginScreen(
                                         .testTag("login_pin_input")
                                 )
 
-                                if (state.errorMessage != null) {
-                                    Spacer(modifier = Modifier.height(14.dp))
-                                    Surface(
-                                        color = MaterialTheme.colorScheme.errorContainer,
-                                        shape = RoundedCornerShape(14.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(
-                                            text = state.errorMessage!!,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onErrorContainer,
-                                            modifier = Modifier.padding(14.dp)
-                                        )
-                                    }
-                                }
+                                LoginErrorBanner(state.errorMessage)
 
                                 Spacer(modifier = Modifier.height(26.dp))
 
@@ -363,9 +342,126 @@ fun LoginScreen(
                                         modifier = Modifier.testTag("go_to_recovery_info_button")
                                     ) {
                                         Text(
-                                            text = strings.accountRecoveryTitle,
+                                            text = strings.resetPinTitle,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+
+                            else -> {
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.MarkEmailRead,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = strings.otpSentToPrefix,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                            Text(
+                                                text = state.maskedEmail.orEmpty(),
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(22.dp))
+
+                                Text(
+                                    text = strings.loginStepOtpTitle,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = strings.loginStepOtpSubtitle,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                Spacer(modifier = Modifier.height(18.dp))
+
+                                PinDotProgressRow(enteredCount = state.otpInput.length, totalDigits = 6)
+
+                                Spacer(modifier = Modifier.height(18.dp))
+
+                                OutlinedTextField(
+                                    value = state.otpInput,
+                                    onValueChange = viewModel::updateOtp,
+                                    label = { Text(strings.otpCodeLabel) },
+                                    placeholder = { Text(strings.otpCodeHint) },
+                                    leadingIcon = { Icon(Icons.Default.Pin, contentDescription = null) },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("login_otp_input")
+                                )
+
+                                LoginErrorBanner(state.errorMessage)
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    TextButton(
+                                        onClick = { viewModel.resendLoginOtp(strings) },
+                                        enabled = state.otpCooldownSeconds == 0 && !state.isLoading,
+                                        modifier = Modifier.testTag("login_resend_otp_button")
+                                    ) {
+                                        Text(
+                                            text = if (state.otpCooldownSeconds > 0) {
+                                                "${strings.resendOtpCountdownPrefix} ${state.otpCooldownSeconds}s"
+                                            } else {
+                                                strings.resendOtpButton
+                                            }
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Button(
+                                    onClick = { viewModel.verifyLoginOtp(strings, onLoginSuccess) },
+                                    enabled = !state.isLoading && state.otpInput.length == 6,
+                                    shape = RoundedCornerShape(18.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp)
+                                        .testTag("login_verify_otp_button")
+                                ) {
+                                    if (state.isLoading) {
+                                        CircularProgressIndicator(
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            strokeWidth = 2.dp,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    } else {
+                                        Text(
+                                            text = strings.verifyOtpButton,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                     }
                                 }
@@ -387,5 +483,24 @@ fun LoginScreen(
             },
             onDismiss = { showCountrySheet = false }
         )
+    }
+}
+
+@Composable
+private fun LoginErrorBanner(errorMessage: String?) {
+    if (errorMessage != null) {
+        Spacer(modifier = Modifier.height(14.dp))
+        Surface(
+            color = MaterialTheme.colorScheme.errorContainer,
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.padding(14.dp)
+            )
+        }
     }
 }

@@ -27,6 +27,9 @@ fun appErrorToLocalizedMessage(error: Throwable, strings: AppStrings): String {
         is AppError.WrongPin -> strings.errorWrongPin
         is AppError.AccountNotFound -> strings.errorAccountNotFound
         is AppError.DuplicateAccount -> strings.errorDuplicateAccount
+        is AppError.DuplicateEmail -> strings.errorDuplicateEmail
+        is AppError.OtpInvalid -> strings.errorInvalidOtp
+        is AppError.EmailOtpNotConfigured -> strings.errorEmailOtpNotConfigured
         is AppError.RateLimited -> {
             if (error.retryAfterSeconds != null && error.retryAfterSeconds > 0) {
                 "${strings.errorRateLimited} (${error.retryAfterSeconds}s)"

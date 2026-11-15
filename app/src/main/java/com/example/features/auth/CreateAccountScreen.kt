@@ -28,9 +28,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MarkEmailRead
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Pin
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -120,7 +123,7 @@ fun CreateAccountScreen(
             ) {
                 AuthStepProgressHeader(
                     currentStep = currentStep,
-                    totalSteps = 3,
+                    totalSteps = 4,
                     strings = strings
                 )
 
@@ -281,13 +284,29 @@ fun CreateAccountScreen(
                                         .testTag("register_name_input")
                                 )
 
+                                Spacer(modifier = Modifier.height(14.dp))
+
+                                OutlinedTextField(
+                                    value = state.emailInput,
+                                    onValueChange = viewModel::updateEmail,
+                                    label = { Text(strings.emailLabel) },
+                                    placeholder = { Text(strings.emailHint) },
+                                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("register_email_input")
+                                )
+
                                 StepErrorBanner(state.errorMessage)
 
                                 Spacer(modifier = Modifier.height(26.dp))
 
                                 Button(
                                     onClick = {
-                                        if (viewModel.validateNameStep(strings)) {
+                                        if (viewModel.validateNameAndEmailStep(strings)) {
                                             currentStep = 2
                                         }
                                     },
@@ -307,7 +326,7 @@ fun CreateAccountScreen(
                                 }
                             }
 
-                            else -> {
+                            2 -> {
                                 SelectedPhonePill(
                                     flagEmoji = state.selectedCountry.flagEmoji,
                                     phoneE164 = viewModel.formattedPhonePreview(),
@@ -329,7 +348,7 @@ fun CreateAccountScreen(
 
                                 Spacer(modifier = Modifier.height(18.dp))
 
-                                PinDotProgressRow(enteredCount = state.pinInput.length)
+                                PinDotProgressRow(enteredCount = state.pinInput.length, totalDigits = 5)
 
                                 Spacer(modifier = Modifier.height(18.dp))
 
@@ -378,13 +397,17 @@ fun CreateAccountScreen(
                                 Spacer(modifier = Modifier.height(26.dp))
 
                                 Button(
-                                    onClick = { viewModel.register(strings, onAccountCreated) },
+                                    onClick = {
+                                        viewModel.sendRegisterOtp(strings) {
+                                            currentStep = 3
+                                        }
+                                    },
                                     enabled = !state.isLoading,
                                     shape = RoundedCornerShape(18.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(56.dp)
-                                        .testTag("register_submit_button")
+                                        .testTag("register_send_otp_button")
                                 ) {
                                     if (state.isLoading) {
                                         CircularProgressIndicator(
@@ -394,7 +417,120 @@ fun CreateAccountScreen(
                                         )
                                     } else {
                                         Text(
-                                            text = strings.createAccountButton,
+                                            text = strings.sendOtpButton,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                                    }
+                                }
+                            }
+
+                            else -> {
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.MarkEmailRead,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = strings.otpSentToPrefix,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                            Text(
+                                                text = state.maskedEmail ?: state.emailInput.trim(),
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(22.dp))
+
+                                Text(
+                                    text = strings.registerStepEmailOtpTitle,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
+                                Spacer(modifier = Modifier.height(18.dp))
+
+                                PinDotProgressRow(enteredCount = state.otpInput.length, totalDigits = 6)
+
+                                Spacer(modifier = Modifier.height(18.dp))
+
+                                OutlinedTextField(
+                                    value = state.otpInput,
+                                    onValueChange = viewModel::updateOtp,
+                                    label = { Text(strings.otpCodeLabel) },
+                                    placeholder = { Text(strings.otpCodeHint) },
+                                    leadingIcon = { Icon(Icons.Default.Pin, contentDescription = null) },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("register_otp_input")
+                                )
+
+                                StepErrorBanner(state.errorMessage)
+
+                                Spacer(modifier = Modifier.height(14.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    TextButton(
+                                        onClick = { viewModel.resendRegisterOtp(strings) },
+                                        enabled = state.otpCooldownSeconds == 0 && !state.isLoading,
+                                        modifier = Modifier.testTag("register_resend_otp_button")
+                                    ) {
+                                        Text(
+                                            text = if (state.otpCooldownSeconds > 0) {
+                                                "${strings.resendOtpCountdownPrefix} ${state.otpCooldownSeconds}s"
+                                            } else {
+                                                strings.resendOtpButton
+                                            }
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Button(
+                                    onClick = { viewModel.verifyRegisterOtpAndCreate(strings, onAccountCreated) },
+                                    enabled = !state.isLoading && state.otpInput.length == 6,
+                                    shape = RoundedCornerShape(18.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp)
+                                        .testTag("register_verify_submit_button")
+                                ) {
+                                    if (state.isLoading) {
+                                        CircularProgressIndicator(
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            strokeWidth = 2.dp,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    } else {
+                                        Text(
+                                            text = strings.verifyOtpButton,
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.SemiBold
                                         )

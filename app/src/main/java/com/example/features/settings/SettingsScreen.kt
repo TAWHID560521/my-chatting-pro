@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
@@ -83,6 +84,7 @@ import com.example.ui.theme.VipGold
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onOpenProfile: () -> Unit,
+    onOpenSecurityDevices: () -> Unit,
     onAccountSignedOutOrDeleted: () -> Unit
 ) {
     val strings = LocalAppStrings.current
@@ -338,6 +340,22 @@ fun SettingsScreen(
                             onClick = { showVersionDialog = true }
                         )
                     }
+                }
+
+                // Security & Logged-in Devices Card
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    SettingsActionRow(
+                        icon = Icons.Default.Security,
+                        title = strings.securityDevicesTitle,
+                        subtitle = strings.securityDevicesSubtitle,
+                        tint = MaterialTheme.colorScheme.primary,
+                        testTag = "settings_security_devices_row",
+                        onClick = onOpenSecurityDevices
+                    )
                 }
 
                 // Account Controls Card (Logout & Permanent Deletion)

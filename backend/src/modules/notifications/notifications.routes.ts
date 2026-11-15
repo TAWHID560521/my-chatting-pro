@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type pg from 'pg';
+import type { Redis } from 'ioredis';
 import { z } from 'zod';
 import type { AppEnv } from '../../config/env.js';
 import { createAuthGuard, type AccessTokenClaims } from '../../security/jwt.js';
@@ -12,9 +13,10 @@ const endpointSchema = z.object({
 export function registerNotificationRoutes(
   app: FastifyInstance,
   pool: pg.Pool,
+  redis: Redis,
   env: AppEnv
 ) {
-  const authGuard = createAuthGuard(env);
+  const authGuard = createAuthGuard(env, redis);
 
   // Non-Firebase push endpoint registration (UnifiedPush / self-hosted ntfy)
   app.post('/api/v1/notifications/endpoint', { preHandler: authGuard }, async (request, reply) => {

@@ -62,6 +62,7 @@ import com.example.features.messages.ChatDetailViewModel
 import com.example.features.messages.MediaViewerScreen
 import com.example.features.profile.ProfileScreen
 import com.example.features.profile.ProfileViewModel
+import com.example.features.settings.ActiveDevicesScreen
 import com.example.features.settings.SettingsScreen
 import com.example.features.settings.SettingsViewModel
 import com.example.ui.components.PermissionRationaleDialog
@@ -75,6 +76,7 @@ import kotlinx.serialization.Serializable
 @Serializable object RouteMainTabs
 @Serializable data class RouteChatDetail(val conversationId: String)
 @Serializable object RouteProfile
+@Serializable object RouteActiveDevices
 @Serializable data class RouteMediaViewer(
     val messageId: String,
     val mediaObjectId: String,
@@ -87,6 +89,21 @@ import kotlinx.serialization.Serializable
 fun AppNavGraph(container: AppContainer) {
     val navController = rememberNavController()
     val callState by container.webRtcCallManager.callState.collectAsState()
+    val session by container.preferencesManager.sessionFlow.collectAsState(initial = null)
+    var wasLoggedIn by remember { mutableStateOf(false) }
+
+    LaunchedEffect(session) {
+        val current = session ?: return@LaunchedEffect
+        if (current.isLoggedIn) {
+            wasLoggedIn = true
+        } else if (wasLoggedIn) {
+            wasLoggedIn = false
+            navController.navigate(RouteWelcome) {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -174,6 +191,7 @@ fun AppNavGraph(container: AppContainer) {
             MainTabsScreen(
                 container = container,
                 onOpenProfile = { navController.navigate(RouteProfile) },
+                onOpenSecurityDevices = { navController.navigate(RouteActiveDevices) },
                 onOpenChat = { convId -> navController.navigate(RouteChatDetail(convId)) },
                 onSignedOutOrDeleted = {
                     navController.navigate(RouteWelcome) {
@@ -227,6 +245,21 @@ fun AppNavGraph(container: AppContainer) {
             )
         }
 
+        composable<RouteActiveDevices> {
+            val settingsVm: SettingsViewModel = viewModel(
+                factory = SettingsViewModel.Factory(container.chatRepository, container.preferencesManager)
+            )
+            ActiveDevicesScreen(
+                viewModel = settingsVm,
+                onBack = { navController.popBackStack() },
+                onCurrentDeviceSignedOut = {
+                    navController.navigate(RouteWelcome) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable<RouteMediaViewer> { entry ->
             val route = entry.toRoute<RouteMediaViewer>()
             MediaViewerScreen(
@@ -250,6 +283,7 @@ fun AppNavGraph(container: AppContainer) {
 private fun MainTabsScreen(
     container: AppContainer,
     onOpenProfile: () -> Unit,
+    onOpenSecurityDevices: () -> Unit,
     onOpenChat: (String) -> Unit,
     onSignedOutOrDeleted: () -> Unit
 ) {
@@ -324,6 +358,7 @@ private fun MainTabsScreen(
                     addChatVm = addChatVm,
                     settingsVm = settingsVm,
                     onOpenProfile = onOpenProfile,
+                    onOpenSecurityDevices = onOpenSecurityDevices,
                     onOpenChat = onOpenChat,
                     onGoToAddChat = { selectedTab = 1 },
                     onSignedOutOrDeleted = onSignedOutOrDeleted,
@@ -358,6 +393,7 @@ private fun MainTabsScreen(
                     addChatVm = addChatVm,
                     settingsVm = settingsVm,
                     onOpenProfile = onOpenProfile,
+                    onOpenSecurityDevices = onOpenSecurityDevices,
                     onOpenChat = onOpenChat,
                     onGoToAddChat = { selectedTab = 1 },
                     onSignedOutOrDeleted = onSignedOutOrDeleted,
@@ -388,6 +424,7 @@ private fun TabContent(
     addChatVm: AddChatViewModel,
     settingsVm: SettingsViewModel,
     onOpenProfile: () -> Unit,
+    onOpenSecurityDevices: () -> Unit,
     onOpenChat: (String) -> Unit,
     onGoToAddChat: () -> Unit,
     onSignedOutOrDeleted: () -> Unit,
@@ -408,6 +445,7 @@ private fun TabContent(
             2 -> SettingsScreen(
                 viewModel = settingsVm,
                 onOpenProfile = onOpenProfile,
+                onOpenSecurityDevices = onOpenSecurityDevices,
                 onAccountSignedOutOrDeleted = onSignedOutOrDeleted
             )
         }

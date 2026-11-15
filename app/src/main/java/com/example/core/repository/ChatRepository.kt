@@ -11,7 +11,11 @@ import com.example.core.local.PreferencesManager
 import com.example.core.localization.DateTimeFormatterUtil
 import com.example.core.media.MediaCompressor
 import com.example.core.media.PreparedMediaFile
+import com.example.core.model.ActiveSessionsResponse
 import com.example.core.model.AuthResponse
+import com.example.core.model.BindEmailRequestOtpBody
+import com.example.core.model.BindEmailVerifyBody
+import com.example.core.model.BindEmailVerifyResponse
 import com.example.core.model.BlockUserRequest
 import com.example.core.model.CompleteUploadRequest
 import com.example.core.model.ConversationDto
@@ -21,11 +25,18 @@ import com.example.core.model.LoginRequest
 import com.example.core.model.MessageDto
 import com.example.core.model.PresignUploadRequest
 import com.example.core.model.RecoveryInfoResponse
+import com.example.core.model.RecoveryRequestOtpBody
+import com.example.core.model.RecoveryResetPinBody
 import com.example.core.model.RegisterRequest
+import com.example.core.model.RegisterRequestOtpBody
 import com.example.core.model.ReportRequest
+import com.example.core.model.RequestOtpResponse
+import com.example.core.model.RevokeOtherSessionsResponse
+import com.example.core.model.RevokeSessionResponse
 import com.example.core.model.SearchUserRequest
 import com.example.core.model.SearchUserResponse
 import com.example.core.model.SendMessageRequest
+import com.example.core.model.ToggleLoginOtpBody
 import com.example.core.model.UpdateProfileRequest
 import com.example.core.model.UserProfileDto
 import com.example.core.network.ApiService
@@ -58,6 +69,9 @@ sealed class AppError(val code: String) : Exception() {
     data object WrongPin : AppError("WRONG_PIN")
     data object AccountNotFound : AppError("ACCOUNT_NOT_FOUND")
     data object DuplicateAccount : AppError("DUPLICATE_ACCOUNT")
+    data object DuplicateEmail : AppError("DUPLICATE_EMAIL")
+    data object OtpInvalid : AppError("OTP_INVALID")
+    data object EmailOtpNotConfigured : AppError("EMAIL_OTP_NOT_CONFIGURED")
     data class RateLimited(val retryAfterSeconds: Long?) : AppError("RATE_LIMITED")
     data object NetworkFailure : AppError("NETWORK_FAILURE")
     data object BackendUnavailable : AppError("BACKEND_UNAVAILABLE")
@@ -117,12 +131,35 @@ class ChatRepository(
         }
     }
 
-    suspend fun register(phoneE164: String, pin: String, displayName: String): Result<AuthResponse> {
+    suspend fun requestRegisterOtp(phoneE164: String, email: String): Result<RequestOtpResponse> {
+        return try {
+            val resp = apiService.requestRegisterOtp(RegisterRequestOtpBody(phoneE164, email.trim()))
+            if (resp.isSuccessful && resp.body() != null) {
+                Result.success(resp.body()!!)
+            } else {
+                Result.failure(mapHttpError(resp))
+            }
+        } catch (e: Exception) {
+            Result.failure(mapNetworkException(e))
+        }
+    }
+
+    suspend fun register(
+        phoneE164: String,
+        email: String,
+        otpChallengeId: String,
+        otpCode: String,
+        pin: String,
+        displayName: String
+    ): Result<AuthResponse> {
         return try {
             val identity = getOrCreateDeviceIdentity()
             val response = apiService.register(
                 RegisterRequest(
                     phoneE164 = phoneE164,
+                    email = email.trim(),
+                    otpChallengeId = otpChallengeId,
+                    otpCode = otpCode.trim(),
                     pin = pin,
                     displayName = displayName,
                     deviceName = "${Build.MANUFACTURER} ${Build.MODEL}",
@@ -135,7 +172,12 @@ class ChatRepository(
         }
     }
 
-    suspend fun login(phoneE164: String, pin: String): Result<AuthResponse> {
+    suspend fun login(
+        phoneE164: String,
+        pin: String,
+        otpChallengeId: String? = null,
+        otpCode: String? = null
+    ): Result<AuthResponse> {
         return try {
             val identity = getOrCreateDeviceIdentity()
             val response = apiService.login(
@@ -143,10 +185,136 @@ class ChatRepository(
                     phoneE164 = phoneE164,
                     pin = pin,
                     deviceName = "${Build.MANUFACTURER} ${Build.MODEL}",
-                    devicePublicKey = identity.publicKeyBase64
+                    devicePublicKey = identity.publicKeyBase64,
+                    otpChallengeId = otpChallengeId,
+                    otpCode = otpCode?.trim()
                 )
             )
             handleAuthResponse(response)
+        } catch (e: Exception) {
+            Result.failure(mapNetworkException(e))
+        }
+    }
+
+    suspend fun requestRecoveryOtp(phoneE164: String, email: String): Result<RequestOtpResponse> {
+        return try {
+            val resp = apiService.requestRecoveryOtp(RecoveryRequestOtpBody(phoneE164, email.trim()))
+            if (resp.isSuccessful && resp.body() != null) {
+                Result.success(resp.body()!!)
+            } else {
+                Result.failure(mapHttpError(resp))
+            }
+        } catch (e: Exception) {
+            Result.failure(mapNetworkException(e))
+        }
+    }
+
+    suspend fun resetPinWithOtp(
+        phoneE164: String,
+        email: String,
+        otpChallengeId: String,
+        otpCode: String,
+        newPin: String
+    ): Result<Unit> {
+        return try {
+            val resp = apiService.resetPinWithOtp(
+                RecoveryResetPinBody(
+                    phoneE164 = phoneE164,
+                    email = email.trim(),
+                    otpChallengeId = otpChallengeId,
+                    otpCode = otpCode.trim(),
+                    newPin = newPin
+                )
+            )
+            if (resp.isSuccessful) Result.success(Unit) else Result.failure(mapHttpError(resp))
+        } catch (e: Exception) {
+            Result.failure(mapNetworkException(e))
+        }
+    }
+
+    suspend fun getActiveSessions(): Result<ActiveSessionsResponse> {
+        return try {
+            val resp = apiService.getActiveSessions()
+            if (resp.isSuccessful && resp.body() != null) {
+                Result.success(resp.body()!!)
+            } else {
+                Result.failure(mapHttpError(resp))
+            }
+        } catch (e: Exception) {
+            Result.failure(mapNetworkException(e))
+        }
+    }
+
+    suspend fun revokeSession(sessionId: String): Result<RevokeSessionResponse> {
+        return try {
+            val resp = apiService.revokeSession(sessionId)
+            val body = resp.body()
+            if (resp.isSuccessful && body != null) {
+                if (body.wasCurrentDevice) {
+                    webSocketManager.stop()
+                    dao.clearAllMessages()
+                    dao.clearAllConversations()
+                    preferencesManager.clearSession()
+                }
+                Result.success(body)
+            } else {
+                Result.failure(mapHttpError(resp))
+            }
+        } catch (e: Exception) {
+            Result.failure(mapNetworkException(e))
+        }
+    }
+
+    suspend fun revokeOtherSessions(): Result<RevokeOtherSessionsResponse> {
+        return try {
+            val resp = apiService.revokeOtherSessions()
+            val body = resp.body()
+            if (resp.isSuccessful && body != null) {
+                Result.success(body)
+            } else {
+                Result.failure(mapHttpError(resp))
+            }
+        } catch (e: Exception) {
+            Result.failure(mapNetworkException(e))
+        }
+    }
+
+    suspend fun setLoginOtpRequired(enabled: Boolean): Result<Unit> {
+        return try {
+            val resp = apiService.setLoginOtpRequired(ToggleLoginOtpBody(enabled))
+            if (resp.isSuccessful) Result.success(Unit) else Result.failure(mapHttpError(resp))
+        } catch (e: Exception) {
+            Result.failure(mapNetworkException(e))
+        }
+    }
+
+    suspend fun requestBindEmailOtp(email: String): Result<RequestOtpResponse> {
+        return try {
+            val resp = apiService.requestBindEmailOtp(BindEmailRequestOtpBody(email.trim()))
+            if (resp.isSuccessful && resp.body() != null) {
+                Result.success(resp.body()!!)
+            } else {
+                Result.failure(mapHttpError(resp))
+            }
+        } catch (e: Exception) {
+            Result.failure(mapNetworkException(e))
+        }
+    }
+
+    suspend fun verifyBindEmailOtp(
+        email: String,
+        otpChallengeId: String,
+        otpCode: String
+    ): Result<BindEmailVerifyResponse> {
+        return try {
+            val resp = apiService.verifyBindEmailOtp(
+                BindEmailVerifyBody(email.trim(), otpChallengeId, otpCode.trim())
+            )
+            if (resp.isSuccessful && resp.body() != null) {
+                Result.success(resp.body()!!)
+            } else {
+                Result.failure(mapHttpError(resp))
+            }
         } catch (e: Exception) {
             Result.failure(mapNetworkException(e))
         }
@@ -692,23 +860,36 @@ class ChatRepository(
             is WsEvent.CallSignal -> {
                 // Handled directly by WebRtcCallManager
             }
+            is WsEvent.SessionRevoked -> {
+                webSocketManager.stop()
+                dao.clearAllMessages()
+                dao.clearAllConversations()
+                preferencesManager.clearSession()
+            }
         }
     }
 
     private suspend fun handleAuthResponse(response: Response<AuthResponse>): Result<AuthResponse> {
         val body = response.body()
         return if (response.isSuccessful && body != null) {
-            preferencesManager.saveSession(
-                accessToken = body.accessToken,
-                refreshToken = body.refreshToken,
-                userId = body.user.id,
-                deviceId = body.deviceId,
-                phoneE164 = body.user.phoneE164,
-                displayName = body.user.displayName,
-                about = body.user.about,
-                avatarUrl = body.user.avatarUrl
-            )
-            webSocketManager.start()
+            if (!body.requiresOtp &&
+                !body.accessToken.isNullOrBlank() &&
+                !body.refreshToken.isNullOrBlank() &&
+                !body.deviceId.isNullOrBlank() &&
+                body.user != null
+            ) {
+                preferencesManager.saveSession(
+                    accessToken = body.accessToken,
+                    refreshToken = body.refreshToken,
+                    userId = body.user.id,
+                    deviceId = body.deviceId,
+                    phoneE164 = body.user.phoneE164,
+                    displayName = body.user.displayName,
+                    about = body.user.about,
+                    avatarUrl = body.user.avatarUrl
+                )
+                webSocketManager.start()
+            }
             Result.success(body)
         } else {
             Result.failure(mapHttpError(response))
@@ -814,13 +995,19 @@ class ChatRepository(
         val parsed = networkClient.parseError(
             try { response.errorBody()?.string() } catch (_: Exception) { null }
         )
-        return when (response.code()) {
-            401 -> AppError.WrongPin
-            404 -> AppError.AccountNotFound
-            409 -> AppError.DuplicateAccount
-            429 -> AppError.RateLimited(parsed?.retryAfterSeconds)
-            502, 503, 504 -> AppError.BackendUnavailable
-            else -> parsed?.error?.let { AppError.ServerMessage(it) } ?: AppError.Unknown
+        return when (parsed?.code) {
+            "EMAIL_OTP_NOT_CONFIGURED" -> AppError.EmailOtpNotConfigured
+            "DUPLICATE_EMAIL" -> AppError.DuplicateEmail
+            "OTP_WRONG", "OTP_EXPIRED", "OTP_USED", "OTP_INVALID", "OTP_LOCKED" ->
+                parsed.error?.let { AppError.ServerMessage(it) } ?: AppError.OtpInvalid
+            else -> when (response.code()) {
+                401 -> parsed?.error?.let { AppError.ServerMessage(it) } ?: AppError.WrongPin
+                404 -> AppError.AccountNotFound
+                409 -> AppError.DuplicateAccount
+                429 -> AppError.RateLimited(parsed?.retryAfterSeconds)
+                502, 503, 504 -> parsed?.error?.let { AppError.ServerMessage(it) } ?: AppError.BackendUnavailable
+                else -> parsed?.error?.let { AppError.ServerMessage(it) } ?: AppError.Unknown
+            }
         }
     }
 

@@ -76,6 +76,7 @@ sealed interface WsEvent {
         val iceSdpMLineIndex: Int?
     ) : WsEvent
     data object SyncRequired : WsEvent
+    data object SessionRevoked : WsEvent
 }
 
 class WebSocketManager(
@@ -216,7 +217,13 @@ class WebSocketManager(
 
                 override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                     activeWebSocket = null
-                    scheduleReconnect()
+                    if (code == 4001 && reason.contains("revoked", ignoreCase = true)) {
+                        shouldStayConnected = false
+                        _connectionState.value = WsConnectionState.DISCONNECTED
+                        _events.tryEmit(WsEvent.SessionRevoked)
+                    } else {
+                        scheduleReconnect()
+                    }
                 }
 
                 override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
@@ -330,6 +337,17 @@ class WebSocketManager(
                             iceSdpMLineIndex = if (p.has("sdp_mline_index")) p.optInt("sdp_mline_index") else null
                         )
                     )
+                }
+                "session.revoked" -> {
+                    val p = root.optJSONObject("payload")
+                    val targetDeviceId = p?.optString("target_device_id").orEmpty()
+                    scope.launch {
+                        val currentDeviceId = preferencesManager.currentSession().deviceId
+                        if (targetDeviceId.isBlank() || targetDeviceId == currentDeviceId) {
+                            stop()
+                            _events.tryEmit(WsEvent.SessionRevoked)
+                        }
+                    }
                 }
             }
         } catch (_: Exception) {

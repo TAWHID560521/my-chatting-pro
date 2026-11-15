@@ -1,10 +1,11 @@
 import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
+import type { Redis } from 'ioredis';
 import type { AppEnv } from '../../config/env.js';
 import { createAuthGuard, type AccessTokenClaims } from '../../security/jwt.js';
 
-export function registerCallRoutes(app: FastifyInstance, env: AppEnv) {
-  const authGuard = createAuthGuard(env);
+export function registerCallRoutes(app: FastifyInstance, redis: Redis, env: AppEnv) {
+  const authGuard = createAuthGuard(env, redis);
 
   app.get('/api/v1/calls/ice-servers', { preHandler: authGuard }, async (request, reply) => {
     const auth = (request as typeof request & { auth: AccessTokenClaims }).auth;

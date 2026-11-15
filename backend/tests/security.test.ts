@@ -6,6 +6,13 @@ import {
   isValidFiveDigitPin,
   normalizePhoneE164
 } from '../src/security/argon2.js';
+import {
+  generateSixDigitOtp,
+  hashOtpCode,
+  maskEmail,
+  normalizeEmail,
+  verifyOtpHash
+} from '../src/security/emailOtp.js';
 
 test('E.164 phone normalization validates international numbers', () => {
   assert.equal(normalizePhoneE164('+880 1711-000000'), '+8801711000000');
@@ -30,4 +37,18 @@ test('Argon2id PIN hashing uses per-user salt and verifies accurately', async ()
   assert.notEqual(first.hash, second.hash);
   assert.equal(await verifyPinArgon2id('48291', first.salt, first.hash), true);
   assert.equal(await verifyPinArgon2id('48292', first.salt, first.hash), false);
+});
+
+test('Email OTP generation, HMAC hashing, and masking work accurately', () => {
+  const code = generateSixDigitOtp();
+  assert.match(code, /^\d{6}$/);
+
+  const { hash, salt } = hashOtpCode(code);
+  assert.equal(verifyOtpHash(code, salt, hash), true);
+  assert.equal(verifyOtpHash('000000', salt, hash), code === '000000');
+  assert.equal(verifyOtpHash('12345', salt, hash), false);
+
+  assert.equal(normalizeEmail('  UserName@Gmail.COM '), 'username@gmail.com');
+  assert.equal(maskEmail('tawhid@gmail.com'), 'ta****@gmail.com');
+  assert.equal(maskEmail('ab@yahoo.com'), 'a***@yahoo.com');
 });

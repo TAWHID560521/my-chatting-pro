@@ -43,7 +43,10 @@ class AuthInterceptor(
         val request = chain.request()
         val path = request.url.encodedPath
         val isPublicAuthEndpoint = path.endsWith("/auth/login") ||
+            path.endsWith("/auth/register/request-otp") ||
             path.endsWith("/auth/register") ||
+            path.endsWith("/auth/recovery/request-otp") ||
+            path.endsWith("/auth/recovery/reset-pin") ||
             path.endsWith("/auth/refresh") ||
             path.endsWith("/auth/recovery-info")
 
@@ -94,16 +97,19 @@ class TokenAuthenticator(
 
                 if (refreshCall != null && refreshCall.isSuccessful && refreshCall.body() != null) {
                     val body = refreshCall.body()!!
-                    preferencesManager.updateTokens(body.accessToken, body.refreshToken)
-                    return@withLock response.request.newBuilder()
-                        .header("Authorization", "Bearer ${body.accessToken}")
-                        .build()
-                } else {
-                    if (refreshCall != null && (refreshCall.code() == 401 || refreshCall.code() == 403)) {
-                        preferencesManager.clearSession()
+                    val newAccess = body.accessToken
+                    val newRefresh = body.refreshToken
+                    if (!newAccess.isNullOrBlank() && !newRefresh.isNullOrBlank()) {
+                        preferencesManager.updateTokens(newAccess, newRefresh)
+                        return@withLock response.request.newBuilder()
+                            .header("Authorization", "Bearer $newAccess")
+                            .build()
                     }
-                    return@withLock null
                 }
+                if (refreshCall != null && (refreshCall.code() == 401 || refreshCall.code() == 403)) {
+                    preferencesManager.clearSession()
+                }
+                return@withLock null
             }
         }
     }

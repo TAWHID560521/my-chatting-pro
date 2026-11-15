@@ -27,7 +27,11 @@ const envSchema = z.object({
   STUN_URL: z.string().default('stun:stun.l.google.com:19302'),
   TURN_URL: z.string().optional().default(''),
   TURN_TLS_URL: z.string().optional().default(''),
-  TURN_SHARED_SECRET: z.string().optional().default('')
+  TURN_SHARED_SECRET: z.string().optional().default(''),
+
+  BREVO_API_KEY: z.string().optional().default(''),
+  EMAIL_FROM_ADDRESS: z.string().optional().default('hafeztawhid15@gmail.com'),
+  EMAIL_FROM_NAME: z.string().optional().default('My Chatting Pro')
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

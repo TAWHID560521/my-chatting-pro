@@ -4,10 +4,15 @@ import type pg from 'pg';
 import type { Redis } from 'ioredis';
 import type { WebSocket } from 'ws';
 import type { AppEnv } from '../config/env.js';
-import { verifyAccessToken } from '../security/jwt.js';
+import { isDeviceRevokedInRedis, verifyAccessToken } from '../security/jwt.js';
+
+interface DeviceSocket {
+  socket: WebSocket;
+  deviceId: string;
+}
 
 export class WsGateway {
-  private readonly connections = new Map<string, Set<WebSocket>>();
+  private readonly connections = new Map<string, Set<DeviceSocket>>();
   private readonly subRedis: Redis;
 
   constructor(
@@ -36,26 +41,52 @@ export class WsGateway {
       }
 
       let userId: string;
+      let deviceId: string;
       try {
         const claims = verifyAccessToken(token, this.env);
         userId = claims.sub;
+        deviceId = claims.did;
       } catch {
         socket.close(4001, 'Invalid token');
         return;
       }
 
+      // Reject revoked devices immediately (both fast Redis check and authoritative Postgres check)
+      if (await isDeviceRevokedInRedis(this.redis, deviceId)) {
+        socket.close(4001, 'Session revoked');
+        return;
+      }
+
+      const activeSess = await this.pool.query(
+        `SELECT 1 FROM sessions
+         WHERE user_id = $1 AND device_id = $2 AND revoked_at IS NULL AND expires_at > NOW()
+         LIMIT 1`,
+        [userId, deviceId]
+      );
+      if (!activeSess.rowCount || activeSess.rowCount === 0) {
+        socket.close(4001, 'Session revoked');
+        return;
+      }
+
+      await this.pool.query(`UPDATE devices SET last_seen_at = NOW() WHERE id = $1`, [deviceId]);
+
+      const entry: DeviceSocket = { socket, deviceId };
       let set = this.connections.get(userId);
       if (!set) {
         set = new Set();
         this.connections.set(userId, set);
       }
-      set.add(socket);
+      set.add(entry);
 
       await this.redis.set(`presence:${userId}`, 'online', 'EX', 90);
       await this.broadcastPresence(userId, true);
 
       socket.on('message', async (raw) => {
         try {
+          if (await isDeviceRevokedInRedis(this.redis, deviceId)) {
+            socket.close(4001, 'Session revoked');
+            return;
+          }
           const parsed = JSON.parse(raw.toString()) as Record<string, unknown>;
           await this.handleClientFrame(userId, parsed);
         } catch {
@@ -66,7 +97,7 @@ export class WsGateway {
       socket.on('close', async () => {
         const userSockets = this.connections.get(userId);
         if (userSockets) {
-          userSockets.delete(socket);
+          userSockets.delete(entry);
           if (userSockets.size === 0) {
             this.connections.delete(userId);
             await this.redis.del(`presence:${userId}`);
@@ -87,6 +118,12 @@ export class WsGateway {
     await this.redis.publish(`ws:user:${userId}`, envelope);
   }
 
+  async disconnectDevice(userId: string, targetDeviceId: string) {
+    await this.publishToUser(userId, 'session.revoked', {
+      target_device_id: targetDeviceId
+    });
+  }
+
   async isUserOnline(userId: string): Promise<boolean> {
     const val = await this.redis.get(`presence:${userId}`);
     return val === 'online';
@@ -95,9 +132,39 @@ export class WsGateway {
   private deliverLocal(userId: string, serializedEnvelope: string) {
     const sockets = this.connections.get(userId);
     if (!sockets) return;
-    for (const ws of sockets) {
-      if (ws.readyState === 1) {
-        ws.send(serializedEnvelope);
+
+    let parsedType = '';
+    let targetDeviceId = '';
+    try {
+      const parsed = JSON.parse(serializedEnvelope) as {
+        type?: string;
+        payload?: { target_device_id?: string };
+      };
+      parsedType = parsed.type ?? '';
+      targetDeviceId = parsed.payload?.target_device_id ?? '';
+    } catch {
+      // Ignore
+    }
+
+    if (parsedType === 'session.revoked' && targetDeviceId) {
+      for (const entry of sockets) {
+        if (entry.deviceId === targetDeviceId) {
+          if (entry.socket.readyState === 1) {
+            entry.socket.send(serializedEnvelope);
+          }
+          try {
+            entry.socket.close(4001, 'Session revoked');
+          } catch {
+            // Ignore close errors
+          }
+        }
+      }
+      return;
+    }
+
+    for (const entry of sockets) {
+      if (entry.socket.readyState === 1) {
+        entry.socket.send(serializedEnvelope);
       }
     }
   }

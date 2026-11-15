@@ -10,6 +10,7 @@ import { logger } from './security/logger.js';
 import { PrivateS3Storage } from './storage/s3.js';
 import { WsGateway } from './websocket/wsGateway.js';
 import { registerAuthRoutes } from './modules/auth/auth.routes.js';
+import { registerSessionSecurityRoutes } from './modules/auth/sessions.routes.js';
 import { registerUserRoutes } from './modules/users/users.routes.js';
 import { registerChatRoutes } from './modules/chats/chats.routes.js';
 import { registerMediaRoutes } from './modules/media/media.routes.js';
@@ -43,12 +44,13 @@ export async function buildApp(env: AppEnv, pool: pg.Pool, redis: Redis) {
   });
 
   wsGateway.registerRoutes(app);
-  registerAuthRoutes(app, pool, redis, storage, env);
-  registerUserRoutes(app, pool, storage, wsGateway, env);
-  registerChatRoutes(app, pool, storage, wsGateway, env);
-  registerMediaRoutes(app, pool, storage, env);
-  registerCallRoutes(app, env);
-  registerNotificationRoutes(app, pool, env);
+  registerAuthRoutes(app, pool, redis, storage, wsGateway, env);
+  registerSessionSecurityRoutes(app, pool, redis, wsGateway, env);
+  registerUserRoutes(app, pool, redis, storage, wsGateway, env);
+  registerChatRoutes(app, pool, redis, storage, wsGateway, env);
+  registerMediaRoutes(app, pool, redis, storage, env);
+  registerCallRoutes(app, redis, env);
+  registerNotificationRoutes(app, pool, redis, env);
 
   return app;
 }

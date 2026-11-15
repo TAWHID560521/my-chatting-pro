@@ -1,9 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import type pg from 'pg';
+import type { Redis } from 'ioredis';
 import { z } from 'zod';
 import type { AppEnv } from '../../config/env.js';
 import type { PrivateS3Storage } from '../../storage/s3.js';
 import { normalizePhoneE164 } from '../../security/argon2.js';
+import { maskEmail } from '../../security/emailOtp.js';
 import { createAuthGuard, type AccessTokenClaims } from '../../security/jwt.js';
 import type { WsGateway } from '../../websocket/wsGateway.js';
 
@@ -31,11 +33,12 @@ const reportSchema = z.object({
 export function registerUserRoutes(
   app: FastifyInstance,
   pool: pg.Pool,
+  redis: Redis,
   storage: PrivateS3Storage,
   wsGateway: WsGateway,
   env: AppEnv
 ) {
-  const authGuard = createAuthGuard(env);
+  const authGuard = createAuthGuard(env, redis);
 
   app.get('/api/v1/users/me', { preHandler: authGuard }, async (request, reply) => {
     const auth = (request as typeof request & { auth: AccessTokenClaims }).auth;
@@ -43,11 +46,13 @@ export function registerUserRoutes(
       id: string;
       phone_e164: string;
       phone_verified: boolean;
+      email: string | null;
+      email_verified: boolean;
       display_name: string;
       about: string;
       avatar_object_key: string | null;
     }>(
-      `SELECT u.id, u.phone_e164, u.phone_verified, p.display_name, p.about, p.avatar_object_key
+      `SELECT u.id, u.phone_e164, u.phone_verified, u.email, u.email_verified, p.display_name, p.about, p.avatar_object_key
        FROM users u JOIN user_profiles p ON p.user_id = u.id
        WHERE u.id = $1`,
       [auth.sub]
@@ -62,6 +67,8 @@ export function registerUserRoutes(
       id: row.id,
       phone_e164: row.phone_e164,
       phone_verified: row.phone_verified,
+      email_verified: row.email_verified,
+      email_masked: row.email ? maskEmail(row.email) : null,
       display_name: row.display_name,
       about: row.about,
       avatar_url: avatarUrl,
